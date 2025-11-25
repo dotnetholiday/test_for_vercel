@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // Adjust path if needed
+import prisma from '@/lib/prisma';
 
 // GET: Fetch all users
 export async function GET() {
@@ -7,7 +7,12 @@ export async function GET() {
         const users = await prisma.test.findMany();
         return NextResponse.json(users);
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? error.message : String(error),
+            },
+            { status: 500 }
+        );
     }
 }
 
@@ -15,11 +20,18 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const { name, email } = await request.json();
+
         const user = await prisma.test.create({
             data: { name, email },
         });
+
         return NextResponse.json(user, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+        return NextResponse.json(
+            {
+                error: error instanceof Error ? error.message : String(error),
+            },
+            { status: 500 }
+        );
     }
 }
