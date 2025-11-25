@@ -1,65 +1,102 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface User {
+  id: number;
+  name: string | null;
+  email: string;
+}
 
 export default function Home() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  // React 18-safe effect — fetch function declared INSIDE effect
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      setUsers(data);
+    };
+
+    fetchUsers();
+  }, []); // runs only once on mount
+
+  const createUser = async () => {
+    await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email }),
+    });
+
+    // Refresh the list
+    const res = await fetch('/api/users');
+    const data = await res.json();
+    setUsers(data);
+
+    // Reset form
+    setName('');
+    setEmail('');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gray-100 py-12 px-6 flex items-center justify-center">
+      <div className="w-full max-w-xl bg-white shadow-xl rounded-2xl p-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          Next.js + Prisma Demo
+        </h1>
+
+        {/* Input Form */}
+        <div className="space-y-4 mb-6">
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+
+          <button
+            onClick={createUser}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold transition-all"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Add User
+          </button>
         </div>
-      </main>
+
+        <hr className="my-6" />
+
+        {/* User List */}
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Users</h2>
+
+        <ul className="space-y-3">
+          {users.length === 0 && (
+            <p className="text-gray-500 text-sm">No users found.</p>
+          )}
+
+          {users.map((user) => (
+            <li
+              key={user.id}
+              className="flex justify-between items-center p-3 rounded-xl bg-gray-50 border border-gray-200"
+            >
+              <span className="font-medium text-gray-900">
+                {user.name || 'Unnamed'}
+              </span>
+              <span className="text-gray-600 text-sm">{user.email}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
